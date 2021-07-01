@@ -4,10 +4,8 @@ import pygame
 from pygame.locals import *
 import numpy as np
 import cv2
-import face_recognition
 import numpy as np
 import configparser
-from pose_engine import PoseEngine
 from PIL import Image
 
 class face2coord:
@@ -26,8 +24,10 @@ class face2coord:
             self.detector = FaceDetector()
         elif self.method == "coral":
             print("coral")
+            from pose_engine import PoseEngine
             self.engine = PoseEngine('posenet_mobilenet_v1_075_481_641_quant_decoder_edgetpu.tflite')
         else:
+            import face_recognition
             print("face_recognition")
         
 
@@ -51,6 +51,8 @@ class face2coord:
             #self.frame = frame
             self.small_frame = cv2.resize(frame, (0, 0), fx=1/self.multi, fy=1/self.multi)
             self.width_cap, self.height_cap, depth = self.small_frame.shape
+            if self.method == "coral":
+                self.width_cap, self.height_cap =  (641, 481)
         
         # no image
         else:
