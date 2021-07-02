@@ -1,3 +1,6 @@
+import random
+import time
+import threading
 import configparser
 #from face2coord_2 import face2coord
 import pygame
@@ -88,7 +91,6 @@ class face2coord:
             #x, y, w, h
         elif self.method == "coral":
             poses, inference_time = self.engine.DetectPosesInImage(Image.fromarray(self.small_frame))
-            print(1/inference_time)
             self.coords = (0.5,0.5)
             #print(poses)
             for pose in poses:
@@ -115,8 +117,18 @@ class face2coord:
         print(self.coords)
         return self.coords
 
-class pygame_eyes():
-    def __init__(self, config):
+
+class SharedObj(object):
+    x = 0
+    y = 0
+    die = False
+
+
+
+class CalcThread(threading.Thread):
+    def __init__(self, shared, *args, **kwargs):
+        super(CalcThread,self).__init__(*args, **kwargs)
+        self.shared = shared
         Config = configparser.ConfigParser()
         Config.read("eyes_coral.conf")
         self.cam = face2coord(camera = int(Config.get("Facedetection", "camera")), 
@@ -125,69 +137,30 @@ class pygame_eyes():
                               method = Config.get("Facedetection", "method"), 
                               confid = Config.get("Facedetection", "confid"))
 
-        self.prev_x, self.prev_y = [[0.5],[0.5]]
-        self.w, self.h = (int(Config.get("Display", "size_w")),int(Config.get("Display", "size_h")))
-        self.screen = pygame.display.set_mode((self.w, self.h), 0, 32)
-        pygame.display.set_caption('eyes')
-        self.clock = pygame.time.Clock()
-        self.running = True
-        self.no_face = 0
-        self.patienete = 8 
-        
-    
-    def x_y(self):
-        return(self.prev_x[-1], self.prev_y[-1])
-    
-    def display(self, x,y):
-        self.screen.fill((255,255,255))
-        #x,y = self.x_y()
-        pygame.draw.circle(self.screen, (0,0,0), (int(self.h-y*self.h), int(x*self.h)), 100, 0)
-        pygame.draw.circle(self.screen, (0,0,0), (int((self.h-y*self.h)+self.h), int(x*self.h)), 100, 0)
-    
-    def update(self):
-        x,y = self.cam.get_face_coords()
-        if x == 0.5 and y == 0.5:
-            self.no_face += 1
-        else:
-            self.no_face = 0
-        
-        if self.no_face > self.patienete or self.no_face == 0:
-            self.prev_x.append(x)
-            self.prev_y.append(y)
-            pygame.display.update()
-            #self.clock.tick(90)
-        else:
-            self.display(self.prev_y[-1], self.prev_x[-1])
-            pygame.display.update()
-            #self.clock.tick(90)
-        
-    def kill(self):
-        pygame.quit()
-        self.cam.release()
-        self.running = False
-    
     def run(self):
-        while self.running:
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    run = False
-                    
-            print("fds")
-            self.display()
-            pygame.display.update()
-            self.clock.tick(30)
+        while(not self.shared.die):
+            x,y = self.cam.get_face_coords()
+            self.shared.x = int(x*800)
+            self.shared.y = int(y*800)
+            print("coral")
+            #time.sleep(1)
+        self.cam.release()
 
 
-import time
-tmp = pygame_eyes("eyes_coral.conf")
-time.sleep(0.3)
-p_time = time.time()
-for i in range(200):
-    tmp.update()
-    c_time = time.time()
-    print(1/(c_time-p_time))
-    p_time = c_time
-    #time.sleep(0.05)
-    
-tmp.kill()
-
+shared_obj = SharedObj()
+thread = CalcThread(shared_obj)
+thread.start()
+pygame.init()
+screen = pygame.display.set_mode([800, 800])
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    screen.fill((255, 255, 255))
+    pygame.draw.circle(screen, (0, 0, 255), (shared_obj.x, shared_obj.y), 75)
+    pygame.display.flip()
+shared_obj.die = True
+time.sleep(0.1)
+thread.join()
+pygame.quit()
