@@ -1,7 +1,5 @@
+import time
 import configparser
-#from face2coord_2 import face2coord
-import pygame
-from pygame.locals import *
 import numpy as np
 import cv2
 import numpy as np
@@ -89,7 +87,7 @@ class face2coord:
         elif self.method == "coral":
             poses, inference_time = self.engine.DetectPosesInImage(Image.fromarray(self.small_frame))
             self.coords = (0.5,0.5)
-            #print(poses)
+            print(1/inference_time)
             for pose in poses:
                 if pose.score < 0.3: continue
                 print('\nPose Score: ', pose.score)
@@ -114,80 +112,18 @@ class face2coord:
         print(self.coords)
         return self.coords
 
-class pygame_eyes():
-    def __init__(self, config):
-        Config = configparser.ConfigParser()
-        Config.read("eyes_coral.conf")
-        self.cam = face2coord(camera = int(Config.get("Facedetection", "camera")), 
+Config = configparser.ConfigParser()
+Config.read("eyes_coral.conf")
+cam = face2coord(camera = int(Config.get("Facedetection", "camera")), 
                               rotate = Config.get("Facedetection", "rotate"),
                               multi = float(Config.get("Facedetection", "multi")), 
                               method = Config.get("Facedetection", "method"), 
                               confid = Config.get("Facedetection", "confid"))
 
-        self.prev_x, self.prev_y = [[0.5],[0.5]]
-        self.w, self.h = (int(Config.get("Display", "size_w")),int(Config.get("Display", "size_h")))
-        self.screen = pygame.display.set_mode((self.w, self.h), 0, 32)
-        pygame.display.set_caption('eyes')
-        self.clock = pygame.time.Clock()
-        self.running = True
-        self.no_face = 0
-        self.patienete = 8 
-        
-    
-    def x_y(self):
-        return(self.prev_x[-1], self.prev_y[-1])
-    
-    def display(self, x,y):
-        self.screen.fill((255,255,255))
-        #x,y = self.x_y()
-        pygame.draw.circle(self.screen, (0,0,0), (int(self.h-y*self.h), int(x*self.h)), 100, 0)
-        pygame.draw.circle(self.screen, (0,0,0), (int((self.h-y*self.h)+self.h), int(x*self.h)), 100, 0)
-    
-    def update(self):
-        x,y = self.cam.get_face_coords()
-        if x == 0.5 and y == 0.5:
-            self.no_face += 1
-        else:
-            self.no_face = 0
-        
-        if self.no_face > self.patienete or self.no_face == 0:
-            self.prev_x.append(x)
-            self.prev_y.append(y)
-            x_list = np.linspace(self.prev_x[-2], self.prev_x[-1], num = 5)
-            y_list = np.linspace(self.prev_y[-2], self.prev_y[-1], num = 5)
-            #self.prev_x.append(0)
-            #self.prev_y.append(0)
-            for i in range(5):
-                self.display(y_list[i], x_list[i])
-                pygame.display.update()
-                self.clock.tick(90)
-        else:
-            self.display(self.prev_y[-1], self.prev_x[-1])
-            pygame.display.update()
-            self.clock.tick(30)
-        
-    def kill(self):
-        pygame.quit()
-        self.cam.release()
-        self.running = False
-    
-    def run(self):
-        while self.running:
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    run = False
-                    
-            print("fds")
-            self.display()
-            pygame.display.update()
-            self.clock.tick(30)
 
-
-import time
-tmp = pygame_eyes("eyes_coral.conf")
-time.sleep(0.3)
+p_time = time.time()
 for i in range(200):
-    tmp.update()
-    #time.sleep(0.05)
-    
-tmp.kill()
+    cam.get_face_coords()
+    c_time = time.time()
+    print(1/(c_time-p_time))
+    p_time = c_time

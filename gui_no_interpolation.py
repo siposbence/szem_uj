@@ -153,18 +153,12 @@ class pygame_eyes():
         if self.no_face > self.patienete or self.no_face == 0:
             self.prev_x.append(x)
             self.prev_y.append(y)
-            x_list = np.linspace(self.prev_x[-2], self.prev_x[-1], num = 5)
-            y_list = np.linspace(self.prev_y[-2], self.prev_y[-1], num = 5)
-            #self.prev_x.append(0)
-            #self.prev_y.append(0)
-            for i in range(5):
-                self.display(y_list[i], x_list[i])
-                pygame.display.update()
-                self.clock.tick(90)
+            pygame.display.update()
+            #self.clock.tick(90)
         else:
             self.display(self.prev_y[-1], self.prev_x[-1])
             pygame.display.update()
-            self.clock.tick(30)
+            #self.clock.tick(90)
         
     def kill(self):
         pygame.quit()
@@ -186,8 +180,13 @@ class pygame_eyes():
 import time
 tmp = pygame_eyes("eyes_coral.conf")
 time.sleep(0.3)
+p_time = time.time()
 for i in range(200):
     tmp.update()
+    c_time = time.time()
+    print(1/(c_time-p_time))
+    p_time = c_time
     #time.sleep(0.05)
     
 tmp.kill()
+
