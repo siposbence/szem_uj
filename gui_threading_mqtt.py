@@ -11,6 +11,13 @@ import numpy as np
 import configparser
 from PIL import Image
 import sys
+import multiprocessing
+import threading
+import time
+import paho.mqtt.client as mqtt
+
+import json
+
 
 
 # Face detection to x-y coordinates
@@ -116,7 +123,8 @@ class face2coord:
                     h = -top+bottom
                     self.coords = ((top+bottom)/2/self.width_cap, (right+left)/2/self.height_cap) 
                     #self.width_cap, self.height_cap
-        print(self.coords)
+        ################################x
+        #print(self.coords)
         return self.coords
 
 
@@ -127,7 +135,7 @@ class SharedObj(object):
 
 
 
-class CalcThread(threading.Thread):
+class CalcThread(threading.Thread): #.Process):
     def __init__(self, shared, *args, **kwargs):
         super(CalcThread,self).__init__(*args, **kwargs)
         self.shared = shared
@@ -142,17 +150,47 @@ class CalcThread(threading.Thread):
     def run(self):
         while(not self.shared.die):
             x,y = self.cam.get_face_coords()
-            self.shared.x = int(x*800)
-            self.shared.y = int(y*800)
-            print("coral")
+            self.shared.x = x
+            self.shared.y = y
+            #print("coral")
             #time.sleep(1)
         self.cam.release()
+
+
+
 
 
 shared_obj = SharedObj()
 thread = CalcThread(shared_obj)
 thread.start()
 
+
+topic="control"
+broker="192.168.2.73"
+port=1884
+def on_connect(client, userdata, flags, rc):
+    print("CONNECTED")
+    print("Connected with result code: ", str(rc))
+    client.subscribe(topic)
+    print("subscribing to topic : "+topic)
+
+
+def on_message(client, userdata, message):
+    print("Data requested "+str(message.payload))
+
+
+### MQTT ###
+client = mqtt.Client()
+client.connect(broker, port)
+client.on_connect = on_connect
+
+#client.on_disconnect = on_disconnect
+def subscribing():
+    client.on_message = on_message
+    client.loop_forever()
+
+sub=threading.Thread(target=subscribing)
+sub.start()
 pygame.init()
 
 window = pygame.display.set_mode((1600, 800))
@@ -177,17 +215,18 @@ while running:
     window.blit(background, background.get_rect())
     window.blit(image_bg_L, (0,0))
     window.blit(image_bg_R, (800,0))
-    window.blit(image, (shared_obj.x*50, shared_obj.y*50))
-    window.blit(image, (shared_obj.x*50+800, shared_obj.y*50))
-
+    window.blit(image, ((shared_obj.x-.5)*50+100, (shared_obj.y-.5)*50))
+    window.blit(image, ((shared_obj.x-.5)*50+800, (shared_obj.y-.5)*50))
+    #print(shared_obj.x)
     
     #pygame.draw.circle(background, (0, 0, 255), (shared_obj.x, shared_obj.y), 75)
 
-    pygame.display.update()
+    pygame.display.flip()
     pygame.time.Clock().tick(60)
 
 shared_obj.die = True
 time.sleep(0.1)
+#app.shutdown()
 thread.join()
 pygame.quit()
 

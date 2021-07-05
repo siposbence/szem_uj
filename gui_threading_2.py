@@ -11,7 +11,14 @@ import numpy as np
 import configparser
 from PIL import Image
 import sys
+import multiprocessing
 
+
+from quart import Quart, request, jsonify
+
+#from flask import Flask, request, jsonify
+
+#app=Flask(__name__)
 
 # Face detection to x-y coordinates
 class face2coord:
@@ -127,7 +134,7 @@ class SharedObj(object):
 
 
 
-class CalcThread(threading.Thread):
+class CalcThread(threading.Thread): #.Process):
     def __init__(self, shared, *args, **kwargs):
         super(CalcThread,self).__init__(*args, **kwargs)
         self.shared = shared
@@ -142,17 +149,51 @@ class CalcThread(threading.Thread):
     def run(self):
         while(not self.shared.die):
             x,y = self.cam.get_face_coords()
-            self.shared.x = int(x*800)
-            self.shared.y = int(y*800)
+            self.shared.x = x
+            self.shared.y = y
             print("coral")
             #time.sleep(1)
         self.cam.release()
+
+app=Quart(__name__)
+
+
+@app.route('/control', methods=['POST'])
+def control():
+    data = request.get_json(force = True)
+    print('control/ called')
+    print('data: ' + str(data))
+
+    if data and 'command' in data:
+        if data['command'] == 'start':
+            if 'mode' in data:
+                if data['mode'] == 'black':
+                    print('Set eyes to black')
+                elif data['mode'] == 'normal':
+                    print('Set eyes to normal')
+                elif data['mode'] == 'anime':
+                    print('Set eyes to kawai')
+            else:
+                print('No mode was specified fallback to default')
+            print('Eyes are turned on')
+        elif data['command'] == 'stop':
+            print('Everithing is black now')
+        else:
+            print('Invalid command is provided')
+            return "error: invalid command"
+            
+    return "ok"
+
+
 
 
 shared_obj = SharedObj()
 thread = CalcThread(shared_obj)
 thread.start()
 
+print("Szia")
+target = app.run(host='0.0.0.0', port=5005, debug=False, threaded=True)
+print("GECÓ")
 pygame.init()
 
 window = pygame.display.set_mode((1600, 800))
@@ -177,17 +218,18 @@ while running:
     window.blit(background, background.get_rect())
     window.blit(image_bg_L, (0,0))
     window.blit(image_bg_R, (800,0))
-    window.blit(image, (shared_obj.x*50, shared_obj.y*50))
-    window.blit(image, (shared_obj.x*50+800, shared_obj.y*50))
-
+    window.blit(image, ((shared_obj.x-.5)*50+100, (shared_obj.y-.5)*50))
+    window.blit(image, ((shared_obj.x-.5)*50+800, (shared_obj.y-.5)*50))
+    print(shared_obj.x)
     
     #pygame.draw.circle(background, (0, 0, 255), (shared_obj.x, shared_obj.y), 75)
 
-    pygame.display.update()
+    pygame.display.flip()
     pygame.time.Clock().tick(60)
 
 shared_obj.die = True
 time.sleep(0.1)
+#app.shutdown()
 thread.join()
 pygame.quit()
 
