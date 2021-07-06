@@ -228,7 +228,8 @@ def on_message(client, userdata, message):
 
         image_bg_L2 = pygame.transform.flip(image_bg_R2, True, False)
         image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
-
+    elif (message.payload).decode("utf-8") =='kill':
+        sys.exit()
     else:
         print("black bg")
         shared_obj.running_coral = False
@@ -249,7 +250,7 @@ sub=threading.Thread(target=subscribing)
 sub.start()
 pygame.init()
 
-window = pygame.display.set_mode((1600, 800))
+window = pygame.display.set_mode((1600, 800), pygame.FULLSCREEN)
 
 background = pygame.Surface((window.get_size()))
 background.fill((255, 255, 255))
