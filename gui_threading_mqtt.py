@@ -2,6 +2,8 @@ import random
 import time
 import threading
 import configparser
+
+from numpy.lib.twodim_base import triu
 #from face2coord_2 import face2coord
 import pygame
 from pygame.locals import *
@@ -132,6 +134,7 @@ class SharedObj(object):
     x = 0
     y = 0
     die = False
+    running_coral = True
 
 
 
@@ -149,9 +152,10 @@ class CalcThread(threading.Thread): #.Process):
 
     def run(self):
         while(not self.shared.die):
-            x,y = self.cam.get_face_coords()
-            self.shared.x = x
-            self.shared.y = y
+            while(self.shared.running_coral):
+                x,y = self.cam.get_face_coords()
+                self.shared.x = x
+                self.shared.y = y
             #print("coral")
             #time.sleep(1)
         self.cam.release()
@@ -166,7 +170,7 @@ thread.start()
 
 
 topic="control"
-broker="192.168.2.73"
+broker="localhost"
 port=1884
 def on_connect(client, userdata, flags, rc):
     print("CONNECTED")
@@ -177,6 +181,52 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, message):
     print("Data requested "+str(message.payload))
+    print((message.payload).decode("utf-8"))
+    global image2, image_bg_R2, image_bg_L2, shared_obj, new_surface
+    if (message.payload).decode("utf-8") =='anime':
+        print("anime eyes")
+        shared_obj.running_coral = True
+        new_surface = True
+
+        image2  = pygame.image.load('pupilla_2.png').convert_alpha()
+        image2 = pygame.transform.scale(image2, (800, 800))
+
+        image_bg_R2 = pygame.image.load('szem_2.png')
+        image_bg_R2 = pygame.transform.scale(image_bg_R2, (800, 800))
+
+        image_bg_L2 = pygame.transform.flip(image_bg_R2, True, False)
+        image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
+    elif (message.payload).decode("utf-8") =='normal':
+        print("normal eyes")
+        shared_obj.running_coral = True
+        new_surface = True
+
+        image2  = pygame.image.load('pupil4.png').convert_alpha()
+        image2 = pygame.transform.scale(image2, (800, 800))
+
+        image_bg_R2 = pygame.image.load('szem_2.png')
+        image_bg_R2 = pygame.transform.scale(image_bg_R2, (800, 800))
+
+        image_bg_L2 = pygame.transform.flip(image_bg_R2, True, False)
+        image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
+    elif (message.payload).decode("utf-8") =='black':
+        print("black eyes")
+        shared_obj.running_coral = True
+        new_surface = True
+
+        image2  = pygame.image.load('fekete_pupilla.png').convert_alpha()
+        image2 = pygame.transform.scale(image2, (800, 800))
+
+        image_bg_R2 = pygame.image.load('szem_2.png')
+        image_bg_R2 = pygame.transform.scale(image_bg_R2, (800, 800))
+
+        image_bg_L2 = pygame.transform.flip(image_bg_R2, True, False)
+        image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
+
+    else:
+        print("black bg")
+        shared_obj.running_coral = False
+
 
 
 ### MQTT ###
@@ -197,31 +247,43 @@ window = pygame.display.set_mode((1600, 800))
 
 background = pygame.Surface((window.get_size()))
 background.fill((255, 255, 255))
-image  = pygame.image.load('pupilla_2.png').convert_alpha()
-image = pygame.transform.scale(image, (800, 800))
+image = pygame.image.load('pupilla_2.png').convert_alpha()
+image = image2 = pygame.transform.scale(image, (800, 800))
 
 image_bg_R = pygame.image.load('szem_2.png')
-image_bg_R = pygame.transform.scale(image_bg_R, (800, 800))
+image_bg_R = image_bg_R2 = pygame.transform.scale(image_bg_R, (800, 800))
 
 image_bg_L = pygame.transform.flip(image_bg_R, True, False)
-image_bg_L = pygame.transform.scale(image_bg_L, (800, 800))
+image_bg_L = image_bg_L2 = pygame.transform.scale(image_bg_L, (800, 800))
 
 running = True
+
+new_surface = False
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    window.fill((255, 255, 255))
-    window.blit(background, background.get_rect())
-    window.blit(image_bg_L, (0,0))
-    window.blit(image_bg_R, (800,0))
-    window.blit(image, ((shared_obj.x-.5)*50+100, (shared_obj.y-.5)*50))
-    window.blit(image, ((shared_obj.x-.5)*50+800, (shared_obj.y-.5)*50))
-    #print(shared_obj.x)
-    
-    #pygame.draw.circle(background, (0, 0, 255), (shared_obj.x, shared_obj.y), 75)
 
-    pygame.display.flip()
+    if shared_obj.running_coral:
+        window.fill((255, 255, 255))
+        window.blit(background, background.get_rect())
+        window.blit(image_bg_L, (0,0))
+        window.blit(image_bg_R, (800,0))
+        window.blit(image, ((shared_obj.x-.5)*50+100, (shared_obj.y-.5)*50))
+        window.blit(image, ((shared_obj.x-.5)*50+800, (shared_obj.y-.5)*50))
+        pygame.display.flip()
+
+        if new_surface:
+            image = image2
+            image_bg_L = image_bg_L2
+            image_bg_R = image_bg_R2
+            new_surface = False
+
+    else:
+        window.fill((0, 0, 0))
+        pygame.display.flip()
+
     pygame.time.Clock().tick(60)
 
 shared_obj.die = True
@@ -229,6 +291,7 @@ time.sleep(0.1)
 #app.shutdown()
 thread.join()
 pygame.quit()
+sys.exit()
 
 
 
