@@ -17,7 +17,7 @@ import multiprocessing
 import threading
 import time
 import paho.mqtt.client as mqtt
-
+import os
 import json
 
 
@@ -230,7 +230,9 @@ def on_message(client, userdata, message):
         image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
     elif (message.payload).decode("utf-8") =='kill':
         pygame.quit()
+        raise SystemExit
         sys.exit()
+        os._exit()
     else:
         print("black bg")
         shared_obj.running_coral = False
