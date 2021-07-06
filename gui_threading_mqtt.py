@@ -182,40 +182,46 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, message):
     print("Data requested "+str(message.payload))
     print((message.payload).decode("utf-8"))
-    global image2, image_bg_R2, image_bg_L2, shared_obj, new_surface
+    global image_R2, image_L2, image_bg_R2, image_bg_L2, shared_obj, new_surface
+
     if (message.payload).decode("utf-8") =='anime':
         print("anime eyes")
         shared_obj.running_coral = True
         new_surface = True
 
-        image2  = pygame.image.load('pupilla_2.png').convert_alpha()
-        image2 = pygame.transform.scale(image2, (800, 800))
+        image_R2 = pygame.image.load('pupilla_2.png').convert_alpha()
+        image_R2 = pygame.transform.rotate(pygame.transform.scale(image_R2, (800, 800)),90)
+
+        image_L2 = pygame.transform.flip(image_R2, True, False)
+        image_L2 = pygame.transform.rotate(pygame.transform.scale(image_L2, (800, 800)),0)
 
         image_bg_R2 = pygame.image.load('szem_2.png')
-        image_bg_R2 = pygame.transform.scale(image_bg_R2, (800, 800))
+        image_bg_R2 = pygame.transform.rotate(pygame.transform.scale(image_bg_R2, (800, 800)), 90)
 
         image_bg_L2 = pygame.transform.flip(image_bg_R2, True, False)
-        image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
+        image_bg_L2 = pygame.transform.rotate(pygame.transform.scale(image_bg_L2, (800, 800)), 0)
+
     elif (message.payload).decode("utf-8") =='normal':
         print("normal eyes")
         shared_obj.running_coral = True
         new_surface = True
 
-        image2  = pygame.image.load('pupil4.png').convert_alpha()
-        image2 = pygame.transform.scale(image2, (800, 800))
+        image_R2 = image_L2 = pygame.image.load('pupil4.png').convert_alpha()
+        image_R2 = image_L2 = pygame.transform.scale(image_R2, (800, 800))
 
         image_bg_R2 = pygame.image.load('szem_2.png')
-        image_bg_R2 = pygame.transform.scale(image_bg_R2, (800, 800))
+        image_bg_R2 = pygame.transform.rotate(pygame.transform.scale(image_bg_R2, (800, 800)), 90)
 
         image_bg_L2 = pygame.transform.flip(image_bg_R2, True, False)
-        image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
+        image_bg_L2 = pygame.transform.rotate(pygame.transform.scale(image_bg_L2, (800, 800)), 0)
+
     elif (message.payload).decode("utf-8") =='black':
         print("black eyes")
         shared_obj.running_coral = True
         new_surface = True
 
-        image2  = pygame.image.load('fekete_pupilla.png').convert_alpha()
-        image2 = pygame.transform.scale(image2, (800, 800))
+        image_R2 = image_L2 = pygame.image.load('fekete_pupilla.png').convert_alpha()
+        image_R2 = image_L2 = pygame.transform.scale(image_R2, (800, 800))
 
         image_bg_R2 = pygame.image.load('szem_2.png')
         image_bg_R2 = pygame.transform.scale(image_bg_R2, (800, 800))
@@ -247,14 +253,18 @@ window = pygame.display.set_mode((1600, 800))
 
 background = pygame.Surface((window.get_size()))
 background.fill((255, 255, 255))
-image = pygame.image.load('pupilla_2.png').convert_alpha()
-image = image2 = pygame.transform.scale(image, (800, 800))
+
+image_R  = pygame.image.load('pupilla_2.png').convert_alpha()
+image_R = image_R2 = pygame.transform.rotate(pygame.transform.scale(image_R, (800, 800)),90)
+
+image_L  = pygame.transform.flip(image_R, True, False)
+image_L = image_L2 = pygame.transform.rotate(pygame.transform.scale(image_L, (800, 800)),0)
 
 image_bg_R = pygame.image.load('szem_2.png')
-image_bg_R = image_bg_R2 = pygame.transform.scale(image_bg_R, (800, 800))
+image_bg_R = image_bg_R2 = pygame.transform.rotate(pygame.transform.scale(image_bg_R, (800, 800)), 90)
 
 image_bg_L = pygame.transform.flip(image_bg_R, True, False)
-image_bg_L = image_bg_L2 = pygame.transform.scale(image_bg_L, (800, 800))
+image_bg_L = image_bg_L2 = pygame.transform.rotate(pygame.transform.scale(image_bg_L, (800, 800)), 0)
 
 running = True
 
@@ -270,12 +280,13 @@ while running:
         window.blit(background, background.get_rect())
         window.blit(image_bg_L, (0,0))
         window.blit(image_bg_R, (800,0))
-        window.blit(image, ((shared_obj.x-.5)*50+100, (shared_obj.y-.5)*50))
-        window.blit(image, ((shared_obj.x-.5)*50+800, (shared_obj.y-.5)*50))
+        window.blit(image_L, ((shared_obj.x-.5)*50+0, (shared_obj.y-.5)*50))
+        window.blit(image_R, ((shared_obj.x-.5)*50+800, (shared_obj.y-.5)*50))
         pygame.display.flip()
 
         if new_surface:
-            image = image2
+            image_L = image_L2
+            image_R = image_R2
             image_bg_L = image_bg_L2
             image_bg_R = image_bg_R2
             new_surface = False
