@@ -230,6 +230,7 @@ def on_message(client, userdata, message):
         image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
     elif (message.payload).decode("utf-8") =='kill':
         pygame.quit()
+        shared_obj.die = True
         raise SystemExit
         sys.exit()
         os._exit()
