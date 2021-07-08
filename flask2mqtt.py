@@ -11,7 +11,7 @@ def on_connect(client, userdata, flags, rc):
     print("CONNECTED")
     print("Connected with result code: ", str(rc))
     client.subscribe("data")
-    print("subscribing to topic : "+topic)
+    print("subscribing to topic : " + topic)
 
 client = mqtt.Client()
 client.connect(broker, port)

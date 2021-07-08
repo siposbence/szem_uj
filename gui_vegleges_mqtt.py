@@ -154,6 +154,7 @@ class SharedObj(object):
     y = 0
     x_list = []
     y_list = []
+    blink_seq = 0 
     no_face_since = 0
     die = False
     running_coral = True
@@ -270,6 +271,40 @@ def on_message(client, userdata, message):
 
         image_bg_L2 = pygame.transform.flip(image_bg_R2, True, False)
         image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
+
+#######################################################
+    elif (message.payload).decode("utf-8") =='blink':
+        print("blink")
+        shared_obj.running_coral = True
+        new_surface = True
+        eye_multi = 200
+
+        if shared_obj.blink_seq>6:
+            image_R2 = pygame.image.load('pupilla_2.png').convert_alpha()
+            image_R2 = pygame.transform.rotate(pygame.transform.scale(image_R2, (800, 800)),90)
+
+            image_L2 = pygame.transform.flip(image_R2, True, False)
+            image_L2 = pygame.transform.rotate(pygame.transform.scale(image_L2, (800, 800)),0)
+
+            image_bg_R2 = pygame.image.load('szem_2.png')
+            image_bg_R2 = pygame.transform.rotate(pygame.transform.scale(image_bg_R2, (800, 800)), 90)
+
+            image_bg_L2 = pygame.transform.flip(image_bg_R2, True, False)
+            image_bg_L2 = pygame.transform.rotate(pygame.transform.scale(image_bg_L2, (800, 800)), 0)
+
+        else:
+            image_R2 = image_L2 = pygame.image.load('blink/' + shared_obj.blink_seq + '.png')
+            image_R2 = image_L2 = pygame.transform.scale(image_R2, (800, 800))
+
+            shared_obj.blink_seq += 1
+
+            image_bg_R2 = pygame.image.load('szem_2.png')
+            image_bg_R2 = pygame.transform.scale(image_bg_R2, (800, 800))
+
+            image_bg_L2 = pygame.transform.flip(image_bg_R2, True, False)
+            image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
+#######################################################
+
     elif (message.payload).decode("utf-8") =='kill':
         pygame.quit()
         raise SystemExit

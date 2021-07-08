@@ -254,7 +254,7 @@ sub=threading.Thread(target=subscribing)
 sub.start()
 pygame.init()
 
-window = pygame.display.set_mode((1600, 800), pygame.FULLSCREEN)
+window = pygame.display.set_mode((1600, 800))#, pygame.FULLSCREEN)
 
 background = pygame.Surface((window.get_size()))
 background.fill((255, 255, 255))
