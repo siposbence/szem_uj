@@ -278,8 +278,9 @@ def on_message(client, userdata, message):
         shared_obj.running_coral = True
         new_surface = True
         eye_multi = 200
-
-        if shared_obj.blink_seq>6:
+        shared_obj.blink_seq = 1
+        """
+                if shared_obj.blink_seq>6:
             image_R2 = pygame.image.load('pupilla_2.png').convert_alpha()
             image_R2 = pygame.transform.rotate(pygame.transform.scale(image_R2, (800, 800)),90)
 
@@ -311,6 +312,8 @@ def on_message(client, userdata, message):
 
             image_bg_L2 = pygame.transform.flip(image_bg_R2, True, False)
             image_bg_L2 = pygame.transform.scale(image_bg_L2, (800, 800))
+        """
+
 #######################################################
 
     elif (message.payload).decode("utf-8") =='kill':
@@ -365,6 +368,27 @@ while running:
             running = False
 
     if shared_obj.running_coral:
+        if shared_obj.blink_seq>0:
+            image_R = pygame.image.load('blink/' + str(shared_obj.blink_seq) + '.jpg')
+            image_R = pygame.transform.rotate(pygame.transform.scale(image_R, (800, 800)),90)
+
+            image_L = pygame.transform.flip(image_R, True, False)
+            image_L = pygame.transform.rotate(pygame.transform.scale(image_L, (800, 800)),0)
+            
+            shared_obj.blink_seq += 1
+
+            image_bg_R = pygame.image.load('szem_2.png')
+            image_bg_R = pygame.transform.scale(image_bg_R, (800, 800))
+
+            image_bg_L = pygame.transform.flip(image_bg_R, True, False)
+            image_bg_L = pygame.transform.scale(image_bg_L, (800, 800))
+
+            if shared_obj.blink_seq>6:
+                shared_obj.blink_seq = 0
+                new_surface = True
+
+
+
         window.fill((255, 255, 255))
         window.blit(background, background.get_rect())
         window.blit(image_bg_L, (0,0))
