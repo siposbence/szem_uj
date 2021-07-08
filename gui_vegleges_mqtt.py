@@ -108,7 +108,7 @@ class face2coord:
             max_dist = 0
             for pose in poses:
                 if pose.score < self.confid: continue
-                print('\nPose Score: ', pose.score)
+                #print('\nPose Score: ', pose.score)
                 left_coords = right_coords = 0
                 left_bool = right_bool = False
                 save_bool = True
@@ -128,9 +128,9 @@ class face2coord:
                     if label.name == "NOSE" and keypoint.score>self.confid:
                         if save_bool:
                             self.coords = (keypoint.point[0]/self.width_cap, keypoint.point[1]/self.height_cap)
-                        print(max_dist)
-                        print('  %-20s x=%-4d y=%-4d score=%.1f' %
-                              (label.name, keypoint.point[0], keypoint.point[1], keypoint.score))
+                        #print(max_dist)
+                        #print('  %-20s x=%-4d y=%-4d score=%.1f' %
+                        #      (label.name, keypoint.point[0], keypoint.point[1], keypoint.score))
 
                     
         else:
@@ -293,8 +293,16 @@ def on_message(client, userdata, message):
             image_bg_L2 = pygame.transform.rotate(pygame.transform.scale(image_bg_L2, (800, 800)), 0)
 
         else:
-            image_R2 = image_L2 = pygame.image.load('blink/' + shared_obj.blink_seq + '.png')
-            image_R2 = image_L2 = pygame.transform.scale(image_R2, (800, 800))
+            
+            image_R2 = pygame.image.load('blink/' + str(shared_obj.blink_seq) + '.jpg')
+            image_R2 = pygame.transform.rotate(pygame.transform.scale(image_R2, (800, 800)),90)
+
+            image_L2 = pygame.transform.flip(image_R2, True, False)
+            image_L2 = pygame.transform.rotate(pygame.transform.scale(image_L2, (800, 800)),0)
+            
+            
+            #image_R2 = image_L2 = pygame.image.load('blink/' + str(shared_obj.blink_seq) + '.jpg')
+            #image_R2 = image_L2 = pygame.transform.scale(image_R2, (800, 800))
 
             shared_obj.blink_seq += 1
 
