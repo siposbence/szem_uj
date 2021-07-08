@@ -103,13 +103,32 @@ class face2coord:
         elif self.method == "coral":
             poses, inference_time = self.engine.DetectPosesInImage(Image.fromarray(self.small_frame))
             self.coords = (0.5,0.5)
-            #print(poses)
+            #LEFT_EYE = 1
+            #RIGHT_EYE = 2
+            max_dist = 0
             for pose in poses:
-                if pose.score < 0.3: continue
+                if pose.score < self.confid: continue
                 print('\nPose Score: ', pose.score)
+                left_coords = right_coords = 0
+                left_bool = right_bool = False
+                save_bool = True
                 for label, keypoint in pose.keypoints.items():
-                    if label.name == "NOSE" and keypoint.score>0.4:
-                        self.coords = (keypoint.point[0]/self.width_cap, keypoint.point[1]/self.height_cap)
+                    if label.name == "LEFT_EYE" and keypoint.score>self.confid:
+                        left_coords = keypoint.point[0]/self.width_cap
+                        left_bool = True
+                    if label.name == "RIGHT_EYE" and keypoint.score>self.confid:
+                        right_coords = keypoint.point[0]/self.width_cap
+                        right_bool = True
+                    
+                    if left_bool and right_bool:
+                        if abs(left_coords-right_coords)>max_dist:
+                            max_dist = abs(left_coords-right_coords)
+                            save_bool = True
+
+                    if label.name == "NOSE" and keypoint.score>self.confid:
+                        if save_bool:
+                            self.coords = (keypoint.point[0]/self.width_cap, keypoint.point[1]/self.height_cap)
+                        print(max_dist)
                         print('  %-20s x=%-4d y=%-4d score=%.1f' %
                               (label.name, keypoint.point[0], keypoint.point[1], keypoint.score))
 
@@ -260,7 +279,7 @@ sub=threading.Thread(target=subscribing)
 sub.start()
 pygame.init()
 
-window = pygame.display.set_mode((1600, 800), pygame.FULLSCREEN)
+window = pygame.display.set_mode((1600, 800)) #, pygame.FULLSCREEN)
 
 background = pygame.Surface((window.get_size()))
 background.fill((255, 255, 255))
