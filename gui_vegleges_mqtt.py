@@ -152,6 +152,9 @@ class face2coord:
 class SharedObj(object):
     x = 0
     y = 0
+    x_list = []
+    y_list = []
+    no_face_since = 0
     die = False
     running_coral = True
 
@@ -173,8 +176,21 @@ class CalcThread(threading.Thread): #.Process):
         while(not self.shared.die):
             while(self.shared.running_coral):
                 x,y = self.cam.get_face_coords()
-                self.shared.x = x
-                self.shared.y = y
+
+                if x == 0.5 and y == 0.5:
+                    self.shared.no_face_since += 1
+                else:
+                    self.shared.no_face_since = 0
+
+                if self.shared.no_face_since == 0 or self.shared.no_face_since > 15:
+                    self.shared.x_list.append(x)
+                    self.shared.y_list.append(y)
+                    
+                if len(self.shared.x_list)>10:
+                    self.shared.x_list.pop(0)
+                    self.shared.y_list.pop(0)
+                self.shared.x = np.mean(self.shared.x_list)
+                self.shared.y = np.mean(self.shared.y_list)
             #print("coral")
             #time.sleep(1)
         self.cam.release()
